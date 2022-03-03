@@ -53,5 +53,5 @@ jobs:
           
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.exefile }}-exe
+          name: ${{ matrix.target }}-exe
           path: ${{ matrix.exefile }}
