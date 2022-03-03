@@ -1,0 +1,16 @@
+rm -rf build dist blackduck_scan_guidance.egg-info; python3 setup.py sdist bdist_wheel
+# pip3 install dist/*.whl
+
+docker image rm ghcr.io/matthewb66/bdghscan2:latest; docker build . -t ghcr.io/matthewb66/bdghscan2:latest --no-cache
+# docker tag bdghscan2:latest ghcr.io/matthewb66/bdghscan2:latest
+# docker container run --name mycontainer -it tag /bin/bash
+
+GHGR:
+echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+docker push ghcr.io/matthewb66/bdghscan2:latest
+
+
+One command:
+rm -rf build dist blackduck_scan_guidance.egg-info; python3 setup.py sdist bdist_wheel; docker image rm ghcr.io/matthewb66/bdghscan2:latest; docker build . -t ghcr.io/matthewb66/bdghscan2:latest --no-cache; docker push ghcr.io/matthewb66/bdghscan2:latest
+
+
