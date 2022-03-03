@@ -1,0 +1,49 @@
+name: compile_and_test
+
+on:
+  push:
+    branches: [ main ]
+
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_and_test:
+    name: Build & test pyinstaller exe on ${{ matrix.os }}.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.9]
+        include:
+          - os: ubuntu-latest
+            target: Linux
+
+          - os: macos-latest
+            target: Macos
+
+          - os: windows-latest
+            target: Windows
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip && pip install pyinstaller && python setup.py install
+
+      - name: Build testexe
+        run: |
+          pyinstaller --onefile bdscan/bdscanaction.py --hidden-import=_cffi_backend
