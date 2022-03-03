@@ -23,13 +23,16 @@ jobs:
         python-version: [3.9]
         include:
           - os: ubuntu-latest
-            target: Linux
+            target: linux
+            exefile: dist/bd_direct_scan
 
           - os: macos-latest
-            target: Macos
+            target: macos
+            exefile: dist/bd_direct_scan
 
           - os: windows-latest
-            target: Windows
+            target: windows
+            exefile: dist/bd_direct_scan.exe
 
     steps:
       - name: Checkout Repository
@@ -46,4 +49,9 @@ jobs:
 
       - name: Build testexe
         run: |
-          pyinstaller --onefile bdscan/bdscanaction.py --hidden-import=_cffi_backend
+          pyinstaller --onefile bdscan/bdscanaction.py --hidden-import=_cffi_backend --name=bd_direct_scan
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.exefile }}-exe
+          path: ${{ matrix.exefile }}
