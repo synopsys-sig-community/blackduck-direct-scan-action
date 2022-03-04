@@ -20,19 +20,20 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.9]
+        python-version: [3.7]
+        filename: bd_direct_scan
         include:
           - os: ubuntu-latest
             target: linux
-            exefile: dist/bd_direct_scan
+            exefile: dist/${{ matrix.filename }}
 
           - os: macos-latest
             target: macos
-            exefile: dist/bd_direct_scan
+            exefile: dist/${{ matrix.filename }}
 
           - os: windows-latest
             target: windows
-            exefile: dist/bd_direct_scan.exe
+            exefile: dist/${{ matrix.filename }}.exe
 
     steps:
       - name: Checkout Repository
@@ -45,11 +46,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip && pip install pyinstaller
+          python -m pip install --upgrade pip && pip install pyinstaller & python setup.py install
 
       - name: Build testexe
         run: |
-          pyinstaller --onefile bdscan/bdscanaction.py --hidden-import=_cffi_backend --name=bd_direct_scan
+          pyinstaller --onefile bdscan/bdscanaction.py --hidden-import=_cffi_backend --name=${{ matrix.filename }}
           
       - uses: actions/upload-artifact@v2
         with:
