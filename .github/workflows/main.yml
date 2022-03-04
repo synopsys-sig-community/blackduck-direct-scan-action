@@ -21,7 +21,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: [3.7]
-        filename: bd_direct_scan
+        filename: [bd_direct_scan]
         include:
           - os: ubuntu-latest
             target: linux
