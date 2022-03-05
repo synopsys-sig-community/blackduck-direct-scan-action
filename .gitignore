@@ -1,0 +1,4 @@
+dist
+build
+blackduck_direct_scan_action.egg-info
+venv
