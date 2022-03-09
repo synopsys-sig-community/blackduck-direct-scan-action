@@ -7,12 +7,16 @@ import shutil
 
 from blackduck import Client
 
-from bdscan import bdoutput, utils, globals, asyncdata as asyncdata, classGitHubProvider, classAzureProvider
+from bdscan import bdoutput, utils, globals, asyncdata as asyncdata, classGitHubProvider, classAzureProvider, \
+    classAzureBoardsProvider
 
 
 def process_bd_scan(output):
     project_baseline_name, project_baseline_version, globals.detected_package_files = \
         bdoutput.get_blackduck_status(output)
+
+    globals.project_name = project_baseline_name
+    globals.project_version = project_baseline_version
 
     rapid_scan_data, dep_dict, direct_deps_to_upgrade = utils.process_scan(globals.args.output, globals.bd)
 
@@ -387,6 +391,20 @@ def main_process(output, runargs):
 
     globals.scm_provider.init()
 
+    if globals.args.create_issue:
+        if globals.args.issue_tracker == 'azure':
+            print(f"BD-Scan-Action: Using Azure Boards for issue tracking")
+            globals.issue_tracking_provider = classAzureBoardsProvider.AzureBoardsProvider()
+        else:
+            print(f"BD-Scan-Action: ERROR: Specified Issue Tracker '{globals.args.issue_tracker}' not supported yet")
+            sys.exit(1)
+
+    if globals.args.create_issue and globals.args.issue_tracker:
+        globals.issue_tracking_provider.init()
+        issues = globals.issue_tracking_provider.get_open_issues()
+
+        #sys.exit(1)
+
     if not globals.args.nocheck:
         if globals.args.fix_pr and not globals.scm_provider.check_files_in_commit():
             print('BD-Scan-Action: No package manager changes in commit - skipping dependency analysis')
@@ -450,14 +468,28 @@ def main_process(output, runargs):
         ok = False
         upgrade_count = 0
         for comp in direct_deps_to_upgrade.components:
+            globals.printdebug(f"DEBUG: for comp={comp} in direct_deps_to_upgrade.components")
             if globals.args.incremental_results and comp.inbaseline:
                 continue
+
+            # Optionally skip component from upgrades in order to test issue workflow
+            globals.printdebug(f"DEBUG: globals.args.skip_compid={globals.args.skip_compid} comp.compid={comp.compid}")
+            if globals.args.skip_compid and comp.compid == globals.args.skip_compid:
+                globals.printdebug(f"DEBUG: SKIPPING")
+                comp.goodupgrade = ''
+
             if comp.goodupgrade != '':
                 upgrade_count += 1
                 if globals.scm_provider.comp_fix_pr(comp):
                     ok = True
+
             else:
                 print(f'BD-Scan-Action: WARNING: Unable to create fix pull request for component {comp.name}')
+                # TODO Issue Tracking
+                print(f'BD-Scan-Action: Attempting work item creation...')
+                globals.issue_tracking_provider.comp_create_or_update_issue(comp)
+                ret_status = True
+                #sys.exit(1)
         if ok:
             print(f'BD-Scan-Action: Created {upgrade_count} pull requests')
             globals.scm_provider.set_commit_status(True)

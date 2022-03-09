@@ -11,6 +11,10 @@ class Component:
         "\n| Parent | Child Component | Vulnerability | Score |  Policy Violated | Description | " \
         "Direct Dep Changed |\n| --- | --- | --- | --- | --- | --- | --- |\n"
 
+    html_comp_vulns_hdr = \
+        "<tr><th>Parent</th><th>Child Component</th><th>Vulnerability</th><th>Score</th><th>Policy Violated</th>" \
+        "<th>Description</th></tr>\n"
+
     def __init__(self, compid, name, version, ns):
         self.ns = ns
         self.pm = ns
@@ -174,6 +178,25 @@ class Component:
 
         md_table_string = self.md_comp_vulns_hdr + md_table_string
         return md_table_string
+
+    def html_table(self):
+        html_comp_vulns_table = []
+        for vulnid in self.vulns.keys():
+            html_comp_vulns_table.append(self.vulns[vulnid])
+        for vulnid in self.childvulns.keys():
+            # sep = " | "
+            html_comp_vulns_table.append(self.childvulns[vulnid])
+
+        # sort the table here
+        html_comp_vulns_table = sorted(html_comp_vulns_table, key=itemgetter(3), reverse=True)
+
+        sep = ' </td><td> '
+        html_table_string = ''
+        for row in html_comp_vulns_table:
+            html_table_string += '<tr><td>' + sep.join(row[0:6]) + ' </td></tr>\n'
+
+        html_table_string = self.html_comp_vulns_hdr + html_table_string
+        return html_table_string
 
     def md_lic_table(self):
         md_comp_lic_table = []

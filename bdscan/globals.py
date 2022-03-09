@@ -14,6 +14,7 @@ debug = 0
 bd = None
 args = None
 scm_provider = None
+issue_tracking_provider = None
 
 pkg_files = ['pom.xml', 'package.json', 'npm-shrinkwrap.json', 'package-lock.json', 'Cargo.toml', 'Cargo.lock',
              'conanfile.txt', 'environment.yml', 'pubspec.yml', 'pubspec.lock', 'gogradle.lock', 'Gopkg.lock',
@@ -34,6 +35,9 @@ tool_rules = []
 results = []
 fix_pr_data = dict()
 rscan_items = []
+
+project_name = None
+project_version = None
 
 comment_on_pr_header = "Synopsys Black Duck - Vulnerabilities Reported"
 

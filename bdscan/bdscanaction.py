@@ -20,7 +20,7 @@ def main():
 
     # os.chdir('/Users/mbrad/working/duck_hub_ORI')
     parser = argparse.ArgumentParser(
-        description="Scan project to determine upgrades for vulnerable dirwct dependencies")
+        description="Scan project to determine upgrades for vulnerable direct dependencies")
     parser.add_argument('--debug', default=0, help='set debug level [0-9]')
     parser.add_argument("--url", required=True, type=str, help="Black Duck Hub URL")
     parser.add_argument("--token", required=True, type=str, help="Black Duck Hub Token")
@@ -44,6 +44,12 @@ def main():
                         help="Passthrough options to Detect, comma delimited, exclude leading hyphens")
     parser.add_argument("--scm", default="github", type=str,
                         help="SCM Platform to integrate with")
+    parser.add_argument("--issue-tracker", default=None, type=str,
+                        help="Issue Tracker to integrate with")
+    parser.add_argument("--create-issue", default="false", type=str,
+                        help="Enable issue tracking for new vulnerabilities")
+    parser.add_argument("--skip-compid", default=None, type=str,
+                        help="Skip a component ID")
 
     globals.args = parser.parse_args()
 
@@ -74,6 +80,13 @@ def main():
     globals.args.comment_on_pr = evaltrue(globals.args.comment_on_pr)
     if globals.args.comment_on_pr:
         print('  --comment_on_pr:       ADD COMMENT TO EXISTING PR')
+
+    globals.args.create_issue = evaltrue(globals.args.fix_pr)
+    if globals.args.create_issue:
+        if (globals.args.issue_tracker == None):
+            print(f"BD-Scan-Action: ERROR: Must specify Issue Tracker to use issue creation")
+            sys.exit(1)
+        print('  --create-issue:        CREATE ISSUE ')
 
     if not isempty(globals.args.sarif):
         print(f"  --sarif:               OUTPUT GH SARIF TO '{globals.args.sarif}'")

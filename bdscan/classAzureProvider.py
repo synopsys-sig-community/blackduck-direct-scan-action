@@ -113,10 +113,14 @@ class AzureProvider(classSCMProvider.SCMProvider):
             print(r.text)
             return False
 
-    def comp_commit_file_and_create_fixpr(self, comp, files_to_patch):
+    def comp_commit_file_and_create_fixpr(self, comp, files_to_patch, pr_title):
         if len(files_to_patch) == 0:
             print('BD-Scan-Action: WARN: Unable to apply fix patch - cannot determine containing package file')
             return False
+
+        pr_body = f"\n# Synopsys Black Duck Auto Pull Request\n" \
+                  f"Upgrade {comp.name} from version {comp.version} to " \
+                  f"{comp.goodupgrade} in order to fix security vulnerabilities:\n\n"
 
         new_branch_seed = '%030x' % random.randrange(16 ** 30)
         new_branch_name = f"synopsys-enablement-{new_branch_seed}"
@@ -139,7 +143,11 @@ class AzureProvider(classSCMProvider.SCMProvider):
         gitPush.commits = []
         gitPush.ref_updates = [gitRefUpdate]
 
-        # for file_to_patch in globals.files_to_patch:
+        gitCommitRef = GitCommitRef()
+        gitCommitRef.comment = pr_title
+        gitCommitRef.changes = []
+
+
         for pkgfile in files_to_patch:
             globals.printdebug(f"DEBUG: Upload file '{pkgfile}'")
             try:
@@ -150,9 +158,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
                       f" - {str(exc)}")
                 return False
 
-            gitCommitRef = GitCommitRef()
-            gitCommitRef.comment = "Added Synopsys pipeline template"
-            gitCommitRef.changes = [
+            gitCommitRef.changes.append(
                 {
                     'changeType': 'edit',
                     'item': {
@@ -163,23 +169,14 @@ class AzureProvider(classSCMProvider.SCMProvider):
                         'contentType': 'rawText'
                     }
                 }
-            ]
+            )
 
-            gitPush.commits.append(gitCommitRef)
-
-            #globals.printdebug(f"DEBUG: Update file '{pkgfile}' with commit message '{commit_message}'")
-            #file = repo.update_file(pkgfile, commit_message, new_contents, orig_contents.sha, branch=new_branch_name)
-
+        gitPush.commits = [gitCommitRef]
         push = self.azure_git_client.create_push(gitPush, self.azure_repo_id)
 
         if not push:
             print(f"BD-Scan-Action: ERROR: Create push failed")
             sys.exit(1)
-
-        pr_title = f"Black Duck: Upgrade {comp.name} to version {comp.goodupgrade} fix known security vulerabilities"
-        pr_body = f"\n# Synopsys Black Duck Auto Pull Request\n" \
-                  f"Upgrade {comp.name} from version {comp.version} to " \
-                  f"{comp.goodupgrade} in order to fix security vulnerabilities:\n\n"
 
         gitPullRequest = GitPullRequest()
         gitPullRequest.source_ref_name = f"refs/heads/{new_branch_name}"
@@ -208,6 +205,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
 
         pulls = self.azure_git_client.get_pull_requests(self.azure_repo_id, search_criteria)
         for pull in pulls:
+            globals.printdebug(f"DEBUG: pull={pull} title={pull.title} pr_title={pull_request_title}")
             if pull_request_title in pull.title:
                 globals.printdebug(f"DEBUG: Skipping pull request for {comp.name}' version "
                                    f"'{comp.goodupgrade} as it is already present")
@@ -219,7 +217,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
             print('BD-Scan-Action: WARN: Unable to apply fix patch - cannot determine containing package file')
             return False
 
-        if not self.comp_commit_file_and_create_fixpr(comp, files_to_patch):
+        if not self.comp_commit_file_and_create_fixpr(comp, files_to_patch, pull_request_title):
             ret = False
         return ret
 

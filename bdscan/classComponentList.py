@@ -273,7 +273,7 @@ class ComponentList:
                         desc += ' ...'
                     name = vuln['name']
                     link = f"{globals.args.url}/api/vulnerabilities/{name}/overview"
-                    vulnname = f'<a href="{link}" target="_blank">{name}</a>'
+                    vulnname = f'<a href="{link}" target=_blank>{name}</a>'
 
                     if comp.inbaseline:
                         changed = 'No'
@@ -318,7 +318,7 @@ class ComponentList:
                     # TODO: This link is not user friendly; follow to generate correct link
                     link = lic['_meta']['href']
                     #link = f"{globals.args.url}/api/vulnerabilities/{name}/overview"
-                    licname = f'<a href="{link}" target="_blank">{name}</a>'
+                    licname = f'<a href="{link}" target=_blank>{name}</a>'
 
                     if comp.inbaseline:
                         changed = 'No'
