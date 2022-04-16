@@ -1,11 +1,11 @@
 import base64
 import json
 import random
-import re
+# import re
 import os
-import shutil
+# import shutil
 import sys
-import tempfile
+# import tempfile
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
@@ -13,10 +13,10 @@ from msrest.authentication import BasicAuthentication
 from bdscan import classSCMProvider
 from bdscan import globals
 
-from bdscan import utils
+# from bdscan import utils
 
-import azure
-import azure.devops
+# import azure
+# import azure.devops
 import requests
 from azure.devops.v6_0.git import GitPushRef, GitRefUpdate, GitPush, GitCommitRef, GitPullRequest, \
     GitPullRequestCommentThread, Comment, GitPullRequestSearchCriteria
@@ -57,7 +57,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
                            f'pull_request_id={self.azure_pull_request_id} project={self.azure_project} '
                            f'project_id={self.azure_project_id} repo_id={self.azure_repo_id}')
 
-        if not self.azure_base_url or  not self.azure_project or not self.azure_repo_id or not self.azure_api_token \
+        if not self.azure_base_url or not self.azure_project or not self.azure_repo_id or not self.azure_api_token \
                 or not self.azure_project_id:
             print(f'BD-Scan-Action: ERROR: Azure DevOps requires that SYSTEM_COLLECTIONURI, SYSTEM_TEAMPROJECT,'
                   'SYSTEM_TEAMPROJECTID, SYSTEM_ACCESSTOKEN or AZURE_API_TOKEN, and BUILD_REPOSITORY_ID be set.')
@@ -72,7 +72,6 @@ class AzureProvider(classSCMProvider.SCMProvider):
             print(f'BD-Scan-Action: ERROR: Azure DevOps requires that BUILD_SOURCEBRANCH be set'
                   'when operating on a pull request')
             sys.exit(1)
-
 
         self.azure_credentials = BasicAuthentication('', self.azure_api_token)
         self.azure_connection = Connection(base_url=self.azure_base_url, creds=self.azure_credentials)
@@ -99,13 +98,13 @@ class AzureProvider(classSCMProvider.SCMProvider):
             }
         ]
 
-        if (globals.debug):
+        if globals.debug > 0:
             print("DEBUG: perform API Call to ADO: " + url + " : " + json.dumps(body, indent=4, sort_keys=True) + "\n")
         r = requests.post(url, json=body, headers=headers)
 
         if r.status_code == 200:
-            if globals.debug: print(f"DEBUG: Success creating branch")
-            if (globals.debug):
+            if globals.debug > 0:
+                print(f"DEBUG: Success creating branch")
                 print(r.text)
             return True
         else:
@@ -167,8 +166,8 @@ class AzureProvider(classSCMProvider.SCMProvider):
 
             gitPush.commits.append(gitCommitRef)
 
-            #globals.printdebug(f"DEBUG: Update file '{pkgfile}' with commit message '{commit_message}'")
-            #file = repo.update_file(pkgfile, commit_message, new_contents, orig_contents.sha, branch=new_branch_name)
+            # globals.printdebug(f"DEBUG: Update file '{pkgfile}' with commit message '{commit_message}'")
+            # file = repo.update_file(pkgfile, commit_message, new_contents, orig_contents.sha, branch=new_branch_name)
 
         push = self.azure_git_client.create_push(gitPush, self.azure_repo_id)
 
@@ -204,7 +203,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
         pull_request_title = f"Black Duck: Upgrade {comp.name} to version " \
                              f"{comp.goodupgrade} to fix known security vulnerabilities"
 
-        search_criteria = None #GitPullRequestSearchCriteria()
+        search_criteria = None  # GitPullRequestSearchCriteria()
 
         pulls = self.azure_git_client.get_pull_requests(self.azure_repo_id, search_criteria)
         for pull in pulls:
@@ -239,7 +238,8 @@ class AzureProvider(classSCMProvider.SCMProvider):
             comments_markdown = comments_markdown[:65535]
 
         if existing_comment is not None:
-            globals.printdebug(f"DEBUG: Update/edit existing comment for PR #{self.azure_pull_request_id}\n{comments_markdown}")
+            globals.printdebug(f"DEBUG: Update/edit existing comment for PR #{self.azure_pull_request_id}\n"
+                               f"{comments_markdown}")
 
             pr_thread_comment = Comment()
             pr_thread_comment.parent_comment_id = 0
@@ -260,7 +260,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
             pr_thread_comment.comment_type = 1
 
             pr_thread = GitPullRequestCommentThread()
-            pr_thread.comments = [ pr_thread_comment ]
+            pr_thread.comments = [pr_thread_comment]
             pr_thread.status = 1
 
             retval = self.azure_git_client.create_thread(pr_thread, self.azure_repo_id, self.azure_pull_request_id)

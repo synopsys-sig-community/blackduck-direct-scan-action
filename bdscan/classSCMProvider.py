@@ -1,9 +1,9 @@
-import re
-import os
-import semver
-from operator import itemgetter
-
-from bdscan import utils
+# import re
+# import os
+# import semver
+# from operator import itemgetter
+#
+# from bdscan import utils
 
 class SCMProvider:
 

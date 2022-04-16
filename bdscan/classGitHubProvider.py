@@ -1,16 +1,17 @@
 import random
 import re
 import os
-import shutil
+# import shutil
 import sys
-import tempfile
+# import tempfile
 
 from bdscan import classSCMProvider
 from bdscan import globals
 
-from bdscan import utils
+# from bdscan import utils
 
 from github import Github
+
 
 class GitHubProvider(classSCMProvider.SCMProvider):
     def __init__(self):
@@ -21,6 +22,9 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         self.github_ref = ''
         self.github_api_url = ''
         self.github_sha = ''
+        self.github_ref_type = ''
+        self.github_ref_name = ''
+        self.github_event_name = ''
 
     def init(self):
         globals.printdebug(f"DEBUG: Initializing GitHub SCM Provider")
@@ -31,6 +35,12 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         self.github_api_url = os.getenv("GITHUB_API_URL")
         self.github_sha = os.getenv("GITHUB_SHA")
         globals.printdebug(f'GITHUB_SHA={self.github_sha}')
+        self.github_ref_type = os.getenv("GITHUB_REF_TYPE")
+        globals.printdebug(f'GITHUB_REF_TYPE={self.github_ref_type}')
+        self.github_ref_name = os.getenv("GITHUB_REF_NAME")
+        globals.printdebug(f'GITHUB_REF_NAME={self.github_ref_name}')
+        self.github_event_name = os.getenv("GITHUB_EVENT_NAME")
+        globals.printdebug(f'GITHUB_EVENT_NAME={self.github_event_name}')
 
         if not self.github_token or not self.github_repo or not self.github_ref or not self.github_api_url \
                 or not self.github_sha:
@@ -38,12 +48,33 @@ class GitHubProvider(classSCMProvider.SCMProvider):
                   'GITHUB_API_URL, and GITHUB_SHA be set.')
             sys.exit(1)
 
+        # If no action set in options, then use github_event_name to set activity
+        if not globals.args.fix_pr and not globals.args.comment_on_pr and not globals.args.sarif:
+            if self.github_event_name == 'pull_request':
+                globals.args.comment_on_pr = True
+            elif self.github_event_name == 'push':
+                globals.args.fix_pr = True
+            elif self.github_event_name == 'workflow_dispatch':
+                return True
+            else:
+                return False
+        elif self.github_event_name is not None and self.github_event_name != '':
+            # Check the specified action matches the event_name
+            if globals.args.fix_pr and self.github_event_name != 'push':
+                return False
+            if globals.args.comment_on_pr and self.github_event_name != 'pull_request':
+                return False
+
         return True
 
     def comp_commit_file_and_create_fixpr(self, g, comp, files_to_patch):
         if len(files_to_patch) == 0:
             print('BD-Scan-Action: WARN: Unable to apply fix patch - cannot determine containing package file')
             return False
+        if self.github_ref_type != 'branch':
+            print('BD-Scan-Action: WARN: Unable to apply fix patch - github_ref_type is not branch')
+            return False
+
         globals.printdebug(f"DEBUG: Look up GitHub repo '{self.github_repo}'")
         repo = g.get_repo(self.github_repo)
         globals.printdebug(repo)
@@ -88,7 +119,7 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         globals.printdebug(pr_body)
         pr = repo.create_pull(title=f"Black Duck: Upgrade {comp.name} to version "
                                     f"{comp.goodupgrade} fix known security vulerabilities",
-                              body=pr_body, head=new_branch_name, base="master")
+                              body=pr_body, head=new_branch_name, base=self.github_ref_name)
         return True
 
     def comp_fix_pr(self, comp):
@@ -146,7 +177,7 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         ref = repo.get_git_ref(self.github_ref[5:].replace("/merge", "/head"))
         globals.printdebug(ref)
 
-        github_sha = ref.object.sha
+        # github_sha = ref.object.sha
 
         pull_number_for_sha = ref.ref.split('/')[2]
         globals.printdebug(f"DEBUG: Pull request #{pull_number_for_sha}")
@@ -244,23 +275,23 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         ref = repo.get_git_ref(self.github_ref[5:].replace("/merge", "/head"))
         globals.printdebug(ref)
 
-        github_sha = ref.object.sha
+        # github_sha = ref.object.sha
 
-        pulls = repo.get_pulls(state='open', sort='created', base=repo.default_branch, direction="desc")
-        pr = None
-        pr_commit = None
-        if globals.debug: print(f"DEBUG: Pull requests:")
+        # pulls = repo.get_pulls(state='open', sort='created', base=repo.default_branch, direction="desc")
+        # pr = None
+        # pr_commit = None
+        globals.printdebug(f"DEBUG: Pull requests:")
 
         pull_number_for_sha = None
-        m = re.search('pull\/(.+?)\/', self.github_ref)
+        m = re.search('pull/(.+?)/', self.github_ref)
         if m:
             pull_number_for_sha = int(m.group(1))
 
-        if globals.debug: print(f"DEBUG: Pull request #{pull_number_for_sha}")
+        globals.printdebug(f"DEBUG: Pull request #{pull_number_for_sha}")
 
-        if pull_number_for_sha == None:
-            print(
-                f"ERROR: Unable to find pull request #{pull_number_for_sha}, must be operating on a push or other event")
+        if pull_number_for_sha is None:
+            print(f"ERROR: Unable to find pull request #{pull_number_for_sha}, must be operating on a push or "
+                  f"other event")
             sys.exit(1)
 
         pr = repo.get_pull(pull_number_for_sha)
@@ -283,6 +314,15 @@ class GitHubProvider(classSCMProvider.SCMProvider):
         repo = g.get_repo(self.github_repo)
         commit = repo.get_commit('HEAD')
         globals.printdebug(commit)
+
+        # if self.github_event_name == 'push' and commit.commit.message.find('Synopsys Black Duck Auto Pull
+        # Request') > 0:
+        m = re.search('Merge pull request #[0-9]* from .*/.*-snps-fix-pr-', commit.commit.message)
+        n = re.search('Black Duck: Upgrade', commit.commit.message)
+        if m and n:
+            # Check if this commit is from a previous run of this action and skip if so
+            globals.printdebug(f"DEBUG: Comment {commit.commit.message} encountered - will skip scan")
+            return False
 
         found = False
         for commit_file in commit.files:
@@ -324,4 +364,3 @@ class GitHubProvider(classSCMProvider.SCMProvider):
             pull_requests.append(pull.title)
 
         return pull_requests
-

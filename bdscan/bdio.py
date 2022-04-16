@@ -73,7 +73,7 @@ def get_bdio_dependency_graph(output_dir):
             parent = node['@id']
             globals.printdebug(f"DEBUG: Parent {parent}")
 
-            # nx_node = None
+            nx_node = None
 
             if "https://blackducksoftware.github.io/bdio#hasDependency" in node:
                 if isinstance(node['https://blackducksoftware.github.io/bdio#hasDependency'], list):

@@ -96,5 +96,6 @@ class NpmComponent(classComponent.Component):
             return -1
         return -1
 
-    def supports_direct_upgrades(self):
+    @staticmethod
+    def supports_direct_upgrades():
         return True

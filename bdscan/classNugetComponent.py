@@ -4,7 +4,7 @@ import tempfile
 
 from bdscan import globals, classComponent
 
-from lxml import etree
+# from lxml import etree
 import xml.etree.ElementTree as ET
 
 
@@ -19,7 +19,7 @@ class NugetComponent(classComponent.Component):
     def __init__(self, compid, name, version, ns):
         super().__init__(compid, name, version, ns)
         self.pm = 'nuget'
-        self.pms = [ 'nuget' ]
+        self.pms = ['nuget']
 
     def get_http_name(self):
         bdio_name = f"http:" + re.sub(":", "/", self.compid)
@@ -48,7 +48,7 @@ class NugetComponent(classComponent.Component):
   </ItemGroup>
 '''
         try:
-            with open('test.csproj', "w") as fp:
+            with open('test.csproj', "a") as fp:
                 fp.write(proj_contents)
         except Exception as e:
             print(e)
@@ -134,5 +134,6 @@ class NugetComponent(classComponent.Component):
 
         return files_to_patch
 
-    def supports_direct_upgrades(self):
+    @staticmethod
+    def supports_direct_upgrades():
         return True

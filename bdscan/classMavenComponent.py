@@ -21,7 +21,6 @@ class MavenComponent(classComponent.Component):
         self.pm = 'maven'
         self.pms = ['maven', 'gradle']
 
-
     def get_http_name(self):
         bdio_name = "http:" + re.sub(":", "/", self.compid)
         return bdio_name
@@ -227,5 +226,6 @@ class MavenComponent(classComponent.Component):
         else:
             return arr[0], arr[1], arr[2]
 
-    def supports_direct_upgrades(self):
+    @staticmethod
+    def supports_direct_upgrades():
         return True

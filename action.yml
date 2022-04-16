@@ -1,0 +1,95 @@
+name: "Black Duck GH Scan Action Directguidance"
+description: "Black Duck Scanning NEW VERSION for GitHub CI/CD Workflows"
+author: "Matthew Brady"
+branding:
+  icon: "alert-triangle"
+  color: "yellow"
+inputs:
+  debug:
+    description: "Debugging"
+    default: "0"
+    required: false
+  bd_url:
+    description: "Black Duck URL"
+    required: true
+  bd_token:
+    description: "Black Duck API Token"
+    required: true
+  bd_trustcert:
+    description: "Trust Black Duck server certificate"
+    required: false
+  project:
+    description: "Project name in the Black Duck server"
+    required: false
+  version:
+    description: "Project version name in the Black Duck server"
+    required: false
+  mode:
+    description: "Scanning mode, intelligent or rapid"
+    default: "rapid"
+    required: false
+  file:
+    description: "Location of the related file in the repository"
+    required: false
+  output_folder:
+    description: "Directory in which to save the rapid scan output"
+    default: "blackduck-output"
+    required: false
+  fix_pr:
+    description: "Generate a Fix PR for each insecure component"
+    default: "false"
+    required: false
+  comment_on_pr:
+    description: "Comment on a pull request"
+    default: "false"
+    required: false
+  sarif:
+    description: "Output file for SARIF"
+    required: false
+  incremental_results:
+    description: "Incremental analysis"
+    required: false
+  upgrade_major:
+    description: "Recommend upgrade guidance to major, not just minor, versions"
+    required: false
+  no_files_check:
+    description: "Skip check of GH commit/PR for changed package manager config files"
+    required: false
+  detect_opts:
+    description: "Passthrough options to Detect, comma delimited, exclude leading hyphens"
+    required: false
+runs:
+  using: "docker"
+#  image: "Dockerfile"
+  image: "docker://ghcr.io/matthewb66/bdghdirectscan:latest"
+  args:
+    - --debug
+    - ${{ inputs.debug }}
+    - --bd_url
+    - ${{ inputs.bd_url }}
+    - --bd_token
+    - ${{ inputs.bd_token }}
+    - --bd_trustcert
+    - ${{ inputs.bd_trustcert }}
+    - --mode
+    - ${{ inputs.mode }}
+    - --output_folder
+    - ${{ inputs.output_folder }}
+    - --project
+    - ${{ inputs.project }}
+    - --version
+    - ${{ inputs.version }}
+    - --fix_pr
+    - ${{ inputs.fix_pr }}
+    - --comment_on_pr
+    - ${{ inputs.comment_on_pr }}
+    - --sarif
+    - ${{ inputs.sarif }}
+    - --incremental_results
+    - ${{ inputs.incremental_results }}
+    - --upgrade_major
+    - ${{ inputs.upgrade_major }}
+    - --no_files_check
+    - ${{ inputs.no_files_check }}
+    - --detect_opts
+    - ${{ inputs.detect_opts }}

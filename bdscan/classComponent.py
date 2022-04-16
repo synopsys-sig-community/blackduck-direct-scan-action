@@ -3,18 +3,18 @@ import os
 import semver
 from operator import itemgetter
 
-from bdscan import utils
+from bdscan import utils, globals
 
 
 class Component:
     md_comp_vulns_hdr = \
-        "\n| Parent | Child Component | Vulnerability | Score |  Policy Violated | Description | " \
-        "Direct Dep Changed |\n| --- | --- | --- | --- | --- | --- | --- |\n"
+        "\n| Direct Dependency | Affected Component | Vulnerability | Score |  Policy Violated | Description |\n" \
+        "| --- | --- | --- | --- | --- | --- |\n"
 
     def __init__(self, compid, name, version, ns):
         self.ns = ns
         self.pm = ns
-        self.pms = [ ns ]
+        self.pms = [ns]
         self.org = ''  # Used in Maven
         self.name = name
         self.version = version
@@ -83,7 +83,7 @@ class Component:
         self.origins[ver] = data
 
     def get_num_vulns(self):
-        return len(self.vulns.keys())
+        return len(self.vulns.keys()) + len(self.childvulns.keys())
 
     def check_ver_origin(self, ver):
         if len(self.origins) > 0 and ver in self.origins.keys():
@@ -111,7 +111,7 @@ class Component:
 
         #
         # Find the initial upgrade (either latest in current version major range or guidance_short)
-        if (len(self.upgradeguidance) > 0):
+        if len(self.upgradeguidance) > 0:
             v_guidance_short = self.check_version_is_release(self.upgradeguidance[0])
             v_guidance_long = self.check_version_is_release(self.upgradeguidance[1])
         else:
@@ -124,7 +124,7 @@ class Component:
             verstring, guidance_major_last = Component.find_next_ver(
                 self, future_vers, v_curr.major, v_curr.minor, v_curr.patch)
         else:
-            if (len(self.upgradeguidance) > 0):
+            if len(self.upgradeguidance) > 0:
                 verstring = self.upgradeguidance[0]
             else:
                 verstring = None
@@ -184,7 +184,7 @@ class Component:
 
         # sort the table here
         # TODO
-        #md_comp_lic_table = sorted(md_comp_lic_table, key=itemgetter(3), reverse=True)
+        # md_comp_lic_table = sorted(md_comp_lic_table, key=itemgetter(3), reverse=True)
 
         sep = ' | '
         md_table_string = ''
@@ -194,20 +194,23 @@ class Component:
         # Do not prepend header, unlike vulnerabilities this will all be summarized
         return md_table_string
 
-
     def shorttext(self):
         if len(self.vulns) > 0 and len(self.childvulns) > 0:
-            shorttext = f"The direct dependency {self.name}/{self.version} has {len(self.vulns)} vulnerabilities " \
+            shorttext = f"The direct dependency '{self.name}/{self.version}' has {len(self.vulns)} vulnerabilities " \
                         f"(max score {self.maxvulnscore}) and {len(self.childvulns)} vulnerabilities in child " \
-                        f"dependencies (max score {self.maxchildvulnscore})."
+                        f"dependencies (max score {self.maxchildvulnscore}) reported by security policy violations."
         elif len(self.vulns) > 0 and len(self.childvulns) == 0:
             shorttext = f"The direct dependency {self.name}/{self.version} has {len(self.vulns)} vulnerabilities " \
-                        f"(max score {self.maxvulnscore})."
+                        f"(max score {self.maxvulnscore})  reported by security policy violations."
         elif len(self.childvulns) > 0:
             shorttext = f"The direct dependency {self.name}/{self.version} has {len(self.childvulns.keys())} " \
-                        f"vulnerabilities in child dependencies (max score {self.maxchildvulnscore})."
+                        f"vulnerabilities in child dependencies (max score {self.maxchildvulnscore})  reported " \
+                        f"by security policy violations."
         else:
             shorttext = ''
+        if shorttext != '' and self.goodupgrade != '':
+            shorttext += f" Upgrade to version '{self.goodupgrade}' to address the reported security policy violations."
+
         return shorttext
 
     def longtext(self):
@@ -260,20 +263,28 @@ class Component:
     #     return "Unknown", 0
 
     def md_summary_table_row(self):
-        # | Direct Dependency | Changed | Num Direct Vulns | Max Direct Vuln Severity | Num Indirect Vulns
+        # | Direct Dependency | Total Vulns | Num Direct Vulns | Max Direct Vuln Severity | Num Indirect Vulns
         # | Max Indirect Vuln Severity | Upgrade to |",
-        if self.inbaseline:
-            changed = 'No'
-        else:
-            changed = 'Yes'
+        # if self.inbaseline:
+        #     changed = 'No'
+        # else:
+        #     changed = 'Yes'
+        upg = self.goodupgrade
+        if self.goodupgrade == '':
+            if globals.args.upgrade_major:
+                upg = 'No Upgrade Available'
+            else:
+                upg = 'No Minor Upgrade Available'
+
         table = [
             f"{self.name}/{self.version}",
-            changed,
+            f"{len(self.vulns.keys()) + len(self.childvulns.keys())}",
             f"{len(self.vulns.keys())}",
             f"{self.maxvulnscore}",
             f"{len(self.childvulns.keys())}",
             f"{self.maxchildvulnscore}",
-            f"{self.goodupgrade}"
+            f"{upg}",
+            # changed,
         ]
         return table
 
@@ -304,7 +315,7 @@ class Component:
             return None
 
         tempver = re.sub('[A-Za-z_-]+\d*$', '', ver.lower())
-        tempver = re.sub('^\D+', '',tempver)
+        tempver = re.sub('^\D+', '', tempver)
         tempver = re.sub('[_-]+', '.', tempver)
 
         arr = tempver.split('.')
@@ -362,12 +373,13 @@ class Component:
                 return False
         if shortguidance_semver is not None:
             if future_semver.major < shortguidance_semver.major:
-                ok = False
+                return False
             elif future_semver.major == shortguidance_semver.major:
                 if future_semver.minor < shortguidance_semver.minor:
-                    ok = False
-                elif future_semver.minor == shortguidance_semver.minor and future_semver.patch < shortguidance_semver.patch:
-                    ok = False
+                    return False
+                elif future_semver.minor == shortguidance_semver.minor and \
+                        future_semver.patch < shortguidance_semver.patch:
+                    return False
 
         return True
 

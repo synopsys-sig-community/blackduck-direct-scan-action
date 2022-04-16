@@ -33,7 +33,7 @@ async def async_main(compidlist, bd, trustcert):
         versions_tasks = []
 
         for compid in compidlist.compids:
-            print(f"DEBUG: Get upgrade data for compid={compid} all_compdata={all_compdata}")
+            # print(f"DEBUG: Get upgrade data for compid={compid} all_compdata={all_compdata}")
             upgradeguidance_task = asyncio.ensure_future(async_get_guidance(session, compid, all_compdata, token,
                                                                             trustcert))
             upgradeguidance_tasks.append(upgradeguidance_task)

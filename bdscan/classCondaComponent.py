@@ -1,16 +1,17 @@
 import re
-import os
-import shutil
-import sys
-import tempfile
+# import os
+# import shutil
+# import sys
+# import tempfile
 
 from bdscan import classComponent
+
 
 class CondaComponent(classComponent.Component):
     def __init__(self, compid, name, version, ns):
         super().__init__(compid, name, version, ns)
         self.pm = 'anaconda'
-        self.pms = [ 'anaconda' ]
+        self.pms = ['anaconda']
 
     def get_http_name(self):
         bdio_name = f"http:" + re.sub(":", "/", self.compid, 1)
@@ -34,11 +35,13 @@ class CondaComponent(classComponent.Component):
         return False
 
     def do_upgrade_dependency(self):
-        print(f"BD-Scan-Action: WARNING: Package manager {self.pm} does not support direct dependency upgrades for indirect vulnerabilities")
+        print(f"BD-Scan-Action: WARNING: Package manager {self.pm} does not support direct dependency upgrades "
+              f"for indirect vulnerabilities")
         return None
 
     def get_projfile_linenum(self, filename):
-        if not filename.endswith('requirements.txt') and not filename.endswith('Pipfile') and not filename.endswith('Pipfile.lock'):
+        if not filename.endswith('requirements.txt') and not filename.endswith('Pipfile') and \
+                not filename.endswith('Pipfile.lock'):
             return -1
         namestring = f'"{self.name.lower()}":'
         try:
@@ -50,5 +53,6 @@ class CondaComponent(classComponent.Component):
             return -1
         return -1
 
-    def supports_direct_upgrades(self):
+    @staticmethod
+    def supports_direct_upgrades():
         return False
