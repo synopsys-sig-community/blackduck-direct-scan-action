@@ -4,7 +4,7 @@
 This is a community supported [GitHub Action](https://github.com/features/actions) for launching Black Duck SCA (OSS vulnerability analysis) scans as part of a GitHub CI/CD action workflow.
 It is provided under an OSS license (specified in the LICENSE file) without warranty or liability and has been developed by Synopsys field engineers as a contribution to the Synopsys user community.
 
-Please direct questions and comments to the [Black Duck Integrations Forum](https://community.synopsys.com/s/topic/0TO34000000gGZnGAM/black-duck-integrations) in the Synopsys user community.
+Please raise issues in the repository initially, or alternatively direct questions and comments to the [Black Duck Integrations Forum](https://community.synopsys.com/s/topic/0TO34000000gGZnGAM/black-duck-integrations) in the Synopsys user community.
 
 ## Overview
 
@@ -257,8 +257,7 @@ The utility action provides a number of input parameters that can be passed usin
 
 # Getting Support
 
-For questions and comments, please contact us via the [Black Duck Integrations Forum](https://community.synopsys.com/s/topic/0TO34000000gGZnGAM/black-duck-integrations).
-Issues can also be raised in GitHub.
+For questions and comments, please raise issues in this repository, alternatively contact us via the [Black Duck Integrations Forum](https://community.synopsys.com/s/topic/0TO34000000gGZnGAM/black-duck-integrations).
 
 Specify the action parameter `debug: 9` to output full logs from the action run and include logs within the issue or community post.
 
