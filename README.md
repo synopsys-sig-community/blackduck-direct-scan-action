@@ -158,8 +158,8 @@ Use the following Action step configuration:
     - name: Black Duck security scan
       uses: synopsys-sig-community/blackduck-direct-scan-action@v1
       with:
-        url: ${{ secrets.BLACKDUCK_URL }}
-        token: ${{ secrets.BLACKDUCK_API_TOKEN }}
+        bd_url: ${{ secrets.BLACKDUCK_URL }}
+        bd_token: ${{ secrets.BLACKDUCK_API_TOKEN }}
         upgrade_major: true
       env:
         GITHUB_TOKEN: ${{ github.token }}
