@@ -222,7 +222,7 @@ The following YAML extract will add the scan utility as a step running as a pyth
      - name: Install dependencies
        run: |
          python -m pip install --upgrade pip
-         pip install -i https://test.pypi.org/simple/ blackduck_direct_scan_action
+         pip install blackduck_direct_scan_action
      - name: Run DirectGuidance Scan
        run: |
          blackduck-direct-scan-action --bd_url ${{ secrets.BLACKDUCK_URL }} --bd_token ${{ secrets.BLACKDUCK_API_TOKEN }} --upgrade_major true
@@ -341,7 +341,7 @@ The following YAML file shows the usage of the scan action for secondary package
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -i https://test.pypi.org/simple/ blackduck_direct_scan_action
+          pip install blackduck_direct_scan_action
  
       # Run manual full/intelligent scan
       - name: Run Black Duck Full Scan
