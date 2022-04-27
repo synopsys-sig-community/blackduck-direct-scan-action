@@ -36,5 +36,5 @@ RUN apt-get update \
 # scan-action specific
 WORKDIR /app
 #
-ENTRYPOINT ["blackduck-scan-directguidance"]
+ENTRYPOINT ["blackduck-direct-scan-action"]
 CMD ["--help"]
