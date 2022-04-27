@@ -92,7 +92,7 @@ def main_process(output, runargs):
     # Todo - Add proxy support
     globals.bd = Client(token=globals.args.bd_token,
                         base_url=globals.args.bd_url,
-                        verify=globals.args.bd_trustcert,
+                        verify=(not globals.args.bd_trustcert),
                         timeout=300)
 
     if globals.bd is None:
