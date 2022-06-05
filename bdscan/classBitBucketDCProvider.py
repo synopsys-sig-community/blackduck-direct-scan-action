@@ -126,7 +126,7 @@ class BitBucketDCProvider(classSCMProvider.SCMProvider):
 
         pr_create_data = {
             "title": f"Black Duck: Upgrade {comp.name} to version "
-                     f"{comp.goodupgrade} fix known security vulnerabilities",
+                     f"{comp.goodupgrade} to fix known security vulnerabilities",
             "description": pr_body,
             "state": "OPEN",
             "open": True,
