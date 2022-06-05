@@ -1,3 +1,4 @@
+import datetime
 import re
 import os
 # import shutil
@@ -275,7 +276,7 @@ class ComponentList:
                         desc += ' ...'
                     name = vuln['name']
                     link = f"{globals.args.bd_url}/api/vulnerabilities/{name}/overview"
-                    vulnname = f'<a href="{link}" target="_blank">{name}</a>'
+                    vulnname = f'[{name}]({link})'
 
                     # if comp.inbaseline:
                     #     changed = 'No'
@@ -350,6 +351,67 @@ class ComponentList:
             # vuln_list = sorted(vuln_list, key=itemgetter(3), reverse=True)
             # vuln_list_children = sorted(vuln_list_children, key=itemgetter(3), reverse=True)
         return
+
+
+    def write_code_insights (self, code_insights_file):
+        file_base = os.path.splitext(code_insights_file)[0]
+
+        file_report = code_insights_file
+        file_annotations = file_base + "-annotations.json"
+
+        sca_report = dict()
+        annotations = []
+
+        sca_report["report_type"] = "SECURITY"
+        sca_report["title"] = "Synopsys Black Duck Report"
+        sca_report["details"] = "SCA report from Black Duck"
+
+        if (len(self.components) > 0):
+            sca_report["result"] = "FAIL"
+        else:
+            sca_report["result"] = "PASS"
+
+        sca_report["reporter"] = "Black Duck"
+        sca_report["link"] = globals.args.bd_url
+        sca_report["logo_url"] = "https://www.cloudfoundry.org/wp-content/uploads/icon_synopsys@2x.png"
+
+        now = datetime.datetime.now()
+        sca_report["created_on"] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        sca_report["updated_on"] = now.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        for comp in self.components:
+            # md_comp_vulns_table = comp.md_table()
+            projfile = ''
+            projfileline = 1
+            if len(comp.projfiles) > 0:
+                projfile = comp.projfiles[0]
+            if len(comp.projfilelines) > 0:
+                projfileline = comp.projfilelines[0]
+
+            severity = "LOW"
+            if (comp.maxvulnscore >= 9):
+                severity = "HIGH"
+            elif (comp.maxvulnscore >= 7):
+                severity = "HIGH"
+            elif (comp.maxvulnscore > 4):
+                severity = "MEDIUM"
+            elif (comp.maxvulnscore > 0.1):
+                severity = "LOW"
+
+            new_issue = dict()
+            new_issue["message"] = f"{comp.name} - {comp.shorttext()}"
+            new_issue["severity"] = severity
+            new_issue["path"] = projfile
+            new_issue["line"] = projfileline
+
+            annotations.append(new_issue)
+
+        with open(file_report, 'w') as fp:
+            json.dump(sca_report, fp, indent=4)
+
+        with open(file_annotations, 'w') as fp:
+            json.dump({'annotations': annotations}, fp, indent=4)
+
 
     def write_sarif(self, sarif_file):
         if os.path.exists(sarif_file):

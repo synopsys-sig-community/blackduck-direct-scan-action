@@ -7,7 +7,7 @@ import shutil
 
 from blackduck import Client
 
-from bdscan import bdoutput, utils, globals, asyncdata as asyncdata, classGitHubProvider, classAzureProvider
+from bdscan import bdoutput, utils, globals, asyncdata as asyncdata, classGitHubProvider, classAzureProvider, classBitBucketDCProvider
 
 
 def process_bd_scan(output):
@@ -50,9 +50,9 @@ def main_process(output, runargs):
     elif globals.args.scm == 'bitbucket':
         print(f"BD-Scan-Action: BitBucket Pipelines not supported yet")
         sys.exit(1)
-    elif globals.args.scm == 'bitbucket-server':
-        print(f"BD-Scan-Action: BitBucket Server/Data Center not supported yet")
-        sys.exit(1)
+    elif globals.args.scm == 'bitbucket-dc':
+        print(f"BD-Scan-Action: Interfacing with BitBucket Data Center")
+        globals.scm_provider = classBitBucketDCProvider.BitBucketDCProvider()
     else:
         print(f"BD-Scan-Action: ERROR: Specified SCM '{globals.args.scm}' not supported yet")
         sys.exit(1)
@@ -125,6 +125,10 @@ def main_process(output, runargs):
         print(f"BD-Scan-Action: Writing sarif output file '{globals.args.sarif}' ...")
         ret_status = direct_deps_to_upgrade.write_sarif(globals.args.sarif)
 
+    if globals.args.code_insights is not None and globals.args.code_insights != '':
+        print(f"BD-Scan-Action: Writing code insights output file '{globals.args.code_insights}' ...")
+        ret_status = direct_deps_to_upgrade.write_code_insights(globals.args.code_insights)
+
     # generate Fix PR
     if globals.args.fix_pr:
         ok = False
@@ -153,7 +157,9 @@ def main_process(output, runargs):
         if len(direct_deps_to_upgrade.components) > 0:
             comment = direct_deps_to_upgrade.get_comments(globals.args.incremental_results)
             if globals.scm_provider.pr_comment(comment):
-                status_ok = False
+                # JC: Should success actually be OK?
+                #status_ok = False
+                status_ok = True
                 print('BD-Scan-Action: Created comment on existing pull request')
             else:
                 print('BD-Scan-Action: ERROR: Unable to create comment on existing pull request')

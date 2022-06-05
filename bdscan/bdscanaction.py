@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--comment_on_pr", type=str, default="false",
                         help="Generate a comment on pull request, true or false")
     parser.add_argument("--sarif", type=str, help="SARIF output file")
+    parser.add_argument("--code-insights", type=str, help="Atlassian Code Insights output file")
     parser.add_argument("--incremental_results", default="false", type=str,
                         help="Compare to previous intelligent scan project - only report & fix new/changed components."
                              "Requires use of --detect.blackduck.rapid.compare.mode option and configured policies.")
@@ -81,6 +82,11 @@ def main():
         print(f"  --sarif:               OUTPUT GH SARIF TO '{globals.args.sarif}'")
     else:
         globals.args.sarif = None
+
+    if not isempty(globals.args.code_insights):
+        print(f"  --code-insights:               OUTPUT ATLASSIAN CODE INSIGHTS TO '{globals.args.code_insights}'")
+    else:
+        globals.args.code_insights = None
 
     print(f'  --bd_url:              BD URL {globals.args.bd_url}')
     print(f'  --bd_token:            BD Token *************')
