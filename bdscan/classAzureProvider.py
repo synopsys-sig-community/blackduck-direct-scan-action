@@ -1,11 +1,8 @@
 import base64
 import json
 import random
-# import re
 import os
-# import shutil
 import sys
-# import tempfile
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
@@ -13,13 +10,8 @@ from msrest.authentication import BasicAuthentication
 from bdscan import classSCMProvider
 from bdscan import globals
 
-# from bdscan import utils
-
-# import azure
-# import azure.devops
 import requests
-from azure.devops.v6_0.git import GitPushRef, GitRefUpdate, GitPush, GitCommitRef, GitPullRequest, \
-    GitPullRequestCommentThread, Comment, GitPullRequestSearchCriteria
+from azure.devops.v7_0.git import GitRefUpdate, GitPush, GitCommitRef, GitPullRequest, GitPullRequestCommentThread, Comment
 
 
 class AzureProvider(classSCMProvider.SCMProvider):
@@ -84,7 +76,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
     def azure_create_branch(self, from_ref, branch_name):
         authorization = str(base64.b64encode(bytes(':' + self.azure_api_token, 'ascii')), 'ascii')
 
-        url = f"{self.azure_base_url}/_apis/git/repositories/{self.azure_repo_id}/refs?api-version=6.0"
+        url = f"{self.azure_base_url}/_apis/git/repositories/{self.azure_repo_id}/refs?api-version=7.0"
 
         headers = {
             'Authorization': 'Basic ' + authorization
@@ -203,7 +195,7 @@ class AzureProvider(classSCMProvider.SCMProvider):
         pull_request_title = f"Black Duck: Upgrade {comp.name} to version " \
                              f"{comp.goodupgrade} to fix known security vulnerabilities"
 
-        search_criteria = None  # GitPullRequestSearchCriteria()
+        search_criteria = None  
 
         pulls = self.azure_git_client.get_pull_requests(self.azure_repo_id, search_criteria)
         for pull in pulls:
