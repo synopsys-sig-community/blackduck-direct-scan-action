@@ -434,4 +434,4 @@ If you wish to output SARIF in addition to fix PR in the same step, use the foll
 
 This parameter uses the Synopsys Detect BOM_COMPARE mode to compare a Rapid scan against the results of a previous Intelligent (full) scan.
 
-To use this mode, you need to ensure that security policies are configured for *both* Rapid and Full scan types. See the Synopsys Detect [documentation](https://detect.synopsys.com/doc) for more details.
+To use this mode, you need to ensure that security policies are configured for *both* Rapid and Full scan types. See the Synopsys Detect [documentation](https://sig-product-docs.synopsys.com/bundle/integrations-detect/page/introduction.html) for more details.
